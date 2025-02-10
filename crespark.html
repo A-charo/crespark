@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crespark</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #001222;
+            color: #fff;
+        }
+        header {
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        background-color: #001222;
+        color: #fff;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .logo h1 {
+        margin: 0;
+        font-size: 20px;
+        color: #fff;
+        margin-right: 20px;
+        white-space: nowrap;
+    }
+
+    .search-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        padding-right: 25px;
+        flex: 1; /* Center-align the search bar */
+    }
+
+    .search-container input[type="text"] {
+        padding: 10px;
+        font-size: 1em;
+        width: 70%;
+        max-width: 400px;
+        border: 1px solid #ddd;
+        border-radius: 20px 0 0 20px; /* Rounded left corners */
+        outline: none;
+    }
+
+    .search-container button {
+        padding: 10px 20px;
+        font-size: 1em;
+        background-color: rgb(185, 184, 184);
+        color: #fff;
+        border: none;
+        padding-top: 10px;
+        padding-bottom: 14px;
+        border-radius: 0 20px 20px 0; /* Rounded right corners */
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .search-container button i {
+        font-size: 16px;
+        color: #0d035a;
+    }
+
+    .search-container button:hover {
+        background-color: #fd9500;
+    }
+
+    .main {
+            margin-top: 193px;
+        }
+        .section {
+            margin: 20px;
+        }
+        .channels {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+        }
+        .channel-card {
+            min-width: 100px;
+            min-height: 150px;
+            width: 60px;
+            background-color: #fd9500;
+            border-radius: 7px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .channel-card img {
+            width: 100%;
+            height: 150px;
+            border-radius: 7px;
+            object-fit: cover;
+        }
+
+
+        .live-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 62px;
+            padding: 10px 20px;
+            border-radius: 30px;
+        }
+        .live-indicator .dot {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: red;
+            border: 2px solid #ffff;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .live-indicator .text {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fd9500;
+        }
+        .sliderads {
+            margin-top: 15px;
+            position: relative;
+            justify-content: center;
+            width: 100%;
+            max-width: 380px;
+            margin: auto;
+            overflow: hidden;
+            border-radius: 5px;
+            aspect-ratio: 16 / 3.5;
+        }
+        .slidesz {
+            margin-top: 12px;
+            display: flex;
+            transition: transform 0.1s ease-in-out;
+        }
+        .slidez {
+            display: flex;
+            text-align: center;
+            align-items: center;
+            min-width: 100%;
+            box-sizing: border-box;
+            border-radius: 5px;
+        }
+        .slidesz h3 {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .hakuna {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            background-color: #001222;
+            box-shadow: 0 8px 10px 0 rgba(255, 208, 0, 0.2), 0 6px 20px 0 rgba(255, 217, 0, 0.19);
+        }
+        
+        .loader-wrapper {
+            position: fixed;
+            top: 50%;
+            left: 50%; /* Inaisogeza kuelekea katikati ya upana */
+            transform: translate(-50%, -50%); /* Inaiweka katikati kwa kurekebisha nafasi */
+            width: 20%;
+            height: 20%;
+            display: flex;
+            justify-content: center; /* Inahakikisha ipo katikati ya upana ndani */
+            align-items: center; /* Inahakikisha ipo katikati ya urefu ndani */
+            z-index: 1000;
+        }
+        .loader {
+            width: 80%;
+            height: 80%;
+            border: 10px solid transparent;
+            border-radius: 50%;
+            animation: rotate 5s linear infinite;
+            position: absolute;
+        }
+
+        .loader-outer {
+            border-top-color: #fd9500;
+            border-bottom-color: #fd9500;
+            background-color: transparent;
+        }
+
+        .loader-inner {
+            border-top-color: #fff;
+            border-bottom-color: #fff;
+            background-color: transparent;
+            animation-duration: 4s;
+        }
+
+@keyframes rotate {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    50% {
+        transform: scale(0.6) rotate(180deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(360deg);
+    }
+}
+
+
+
+
+.player-container {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #001222;
+    z-index: 1000;
+}
+
+#playerContainer {
+    margin-top: 40px;
+    width: 100%; /* Allow the video to take full width */
+    max-width: 1000px; /* Maximum width of the video */
+    height: auto; /* Automatically adjust height based on width */
+    aspect-ratio: 16 / 9; /* Set the aspect ratio to 16:9 */
+    object-fit: contain; /* Ensure the video fits within bounds without clipping */
+    border-radius: 10px;
+    border: 1px solid #ffffff;
+    background-color: #001222;
+}
+
+        .channel-title {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            color: #fff;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            background-color: #000c48;
+            padding-right: 15px;
+            padding-left: 15px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border-radius: 10px;
+            border: 5px solid #fd9500;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: rgba(255, 0, 0, 0.8);
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            z-index: 10;
+            transition: background-color 0.3s ease;
+        }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .watermark img {
+            width: 150px;
+            height: auto;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search Channel By Name..." onkeyup="filterChannels()">
+        <button onclick="toggleSearchBar()"><i class="fa fa-search"></i></button>
+    </div>
+</header>
+
+<div id="loading" class="loader-wrapper">
+    <div class="loader loader-outer">
+        <div class="loader loader-inner"></div>
+    </div>
+</div>
+<div class="hakuna">
+    <div class="headert">
+    </div>
+    <div class="live-indicator">
+        <div class="text">CRESPARK NOW</div>
+        <div class="dot"></div>
+    </div>
+    <div class="sliderads">  
+        <div class="slidesz"> 
+            <div class="slidez"><h3 style="background-color: #460000;padding-top: 25px;">WELCOM TO CRESPARK  DIGITAL DISH</h3></div>
+            <div class="slidez"><h3 style="background-color: #034b4e;padding-top: 25px;">SEARCH CHANNEL BY NAME / NUMBER</h3></div>
+            <div class="slidez"><h3 style="background-color: #380339;padding-top: 25px;">SEE THE ENTERTAINMENT IN CRESPARK</h3></div>
+            <div class="slidez"><h3 style="background-color: #000c48;padding-top: 25px;">THANK YOU FOR USING CRESPARK DISH</h3></div>  
+        </div>  
+    </div> 
+</div>
+
+<div class="main" id="mainContent"></div>
+<div class="player-container" id="playerContainerWrapper">
+    <div id="playerContainer"></div>
+    <button class="close-btn" onclick="closePlayer()">✕</button>
+    <div class="watermark">
+        <img src="https://i.ibb.co/9kf3Hnqf/watermark.png">
+    </div>
+    <div class="channel-title" id="channelTitle"></div>
+</div>
+
+
+<script>
+    const SHEET_ID = "1TYIylmSyB5EMoQlBGtdhAAOVoM4Oc1BXKrtpND7Y7v8";
+    const API_KEY = "AIzaSyDIw6pHVQwrpv1TjkcNsxU1K8ulixnD5QM";
+    const SHEET_NAME = "Sheet1";
+    const mainContent = document.getElementById("mainContent");
+    const playerContainerWrapper = document.getElementById("playerContainerWrapper");
+    let player;
+
+    async function fetchChannels() {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (!data.values || data.values.length === 0) {
+                console.error("No Data From Crespark Dish.");
+                return;
+            }
+            const rows = data.values.slice(1);
+            const categories = {};
+            rows.forEach(row => {
+                const [channelName, imageUrl, link, category] = row;
+                if (!categories[category]) categories[category] = [];
+                categories[category].push({ channelName, imageUrl, link });
+            });
+            Object.keys(categories).forEach(category => {
+                const section = document.createElement("div");
+                section.classList.add("section");
+                const heading = document.createElement("h2");
+                heading.textContent = category;
+                const channelContainer = document.createElement("div");
+                channelContainer.classList.add("channels");
+                categories[category].forEach(({ channelName, imageUrl, link }) => {
+                    const channelCard = document.createElement("div");
+                    channelCard.classList.add("channel-card");
+                    channelCard.setAttribute("data-name", channelName);
+                    const img = document.createElement("img");
+                    img.src = imageUrl;
+                    img.alt = channelName;
+                    channelCard.appendChild(img);
+                    channelCard.addEventListener("click", () => {
+                        openPlayer(link, channelName);
+                    });
+                    channelContainer.appendChild(channelCard);
+                });
+                section.appendChild(heading);
+                section.appendChild(channelContainer);
+                mainContent.appendChild(section);
+            });
+        } catch (error) {
+            console.error("Failed loading channels", error);
+        } finally {
+                document.getElementById("loading").style.visibility = "hidden";
+            }
+    }
+
+    function openPlayer(link, channelName) {
+        playerContainerWrapper.style.display = "flex";
+        document.getElementById("channelTitle").textContent = `🔴YOU ARE WATCHING-${channelName}- ON CRESPARK DISH`;
+        if (player) {
+            player.destroy();
+        }
+        player = new Clappr.Player({
+            source: link,
+            parentId: "#playerContainer",
+            width: "100%",
+            height: "100%",
+            autoPlay: true,
+        });
+    }
+
+    function closePlayer() {
+        playerContainerWrapper.style.display = "none";
+        if (player) {
+            player.destroy();
+        }
+    }
+
+    function filterChannels() {
+        const searchInput = document.getElementById("searchInput").value.toLowerCase();
+        document.querySelectorAll(".channel-card").forEach(card => {
+            card.style.display = card.getAttribute("data-name").toLowerCase().includes(searchInput) ? "block" : "none";
+        });
+    }
+
+    fetchChannels();
+
+             // START ADS SLIDER IMAGES
+             let slidesz = document.querySelector(".slidesz"); // Container for all slides
+        let slideIndex = 0; // Starting index for the slider
+
+        // Function to show a specific slide
+        function showSlidez(index) {  
+            if (slidesz && slidesz.children.length > 0) { // Ensure slidesz exists and has children
+                slidesz.style.transform = `translateX(-${index * 100}%)`;  
+                slidesz.style.transition = "transform 0.5s ease-in-out"; // Smooth sliding effect
+            }
+        }  
+
+        // Function to move to the next slide
+        function nextSlidez() {  
+            if (slidesz && slidesz.children.length > 0) { // Ensure slidesz exists and has children
+                slideIndex = (slideIndex + 1) % slidesz.children.length;  
+                showSlidez(slideIndex);  
+            }
+        }
+
+        // Automatically change slide every 4 seconds
+        setInterval(nextSlidez, 4000);
+
+        // END ADS SLIDER IMAGES
+        
+                       // SECURITY FOR CRESPARK DIGITAL DISH
+        // RIGHT CLICK LOCK
+        document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+// END RIGHT CLICK LOCK
+
+// hatari ya kupakua
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        alert("Please stop using extensions to download content From Crespark Dish!");
+        window.location.href = "https://www.asyro.pro/crespark-warning"; // Funga ukurasa
+    }
+});
+
+// hatari ya kudownload
+document.addEventListener('click', function(e) {
+    const element = e.target;
+    if (element.tagName === 'A' && element.hasAttribute('download')) {
+        e.preventDefault();
+        alert("Downloads are locked on Crespark Dish!");
+    }
+});
+
+// nyingezA
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        alert("This service does not accept hacking tools or downloading content!");
+        window.location.href = "https://www.asyro.pro/crespark-warning"; // Elekeza ukurasa mpya
+    }
+});
+
+// Ongeza ulinzi wa kuzuia User-Agent za IDM
+setInterval(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.includes("idm") || userAgent.includes("internet download manager")) {
+        alert("IDM software has been detected. Content cannot be used!");
+        window.location.href = "https://www.asyro.pro/crespark-warning";
+    }
+}, 1000);
+
+
+
+(function() {
+    let devToolsOpen = false;
+
+    // Kuzuia matukio ya funguo maalum
+    document.addEventListener('keydown', function(e) {
+        // Zuia F12
+        if (e.key === 'F12') {
+            e.preventDefault();
+            alert('F12 is blocked!');
+        }
+        // Zuia Ctrl+Shift+I
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+            alert('Ctrl+Shift+I is blocked!');
+        }
+        // Zuia Ctrl+Shift+J
+        if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+            e.preventDefault();
+            alert('Ctrl+Shift+J is blocked!');
+        }
+        // Zuia Ctrl+U
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            alert('Ctrl+U is blocked!');
+        }
+        // Zuia Ctrl+Shift+C
+        if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+            e.preventDefault();
+            alert('Ctrl+Shift+C is blocked!');
+        }
+        // Zuia Ctrl+S (Kuzuia Save Page As)
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            alert('Ctrl+S is blocked!');
+        }
+    });
+
+    // Kufuata maendeleo ya zana za developer kila milisekunde 1
+    const checkDevTools = setInterval(function() {
+        // Angalia kama firebug au console.table zipo
+        if (window.console && (console.firebug || console.table)) {
+            devToolsOpen = true;
+        }
+
+        // Angalia kwa debugger kwenye console
+        debugger;
+
+        // Ukubwa wa dirisha la kivinjari ni mkubwa wakati developer tools iko wazi
+        if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
+            devToolsOpen = true;
+        }
+
+
+    }, 1); // Angalia kila milisekunde 1
+})();
+</script>
+
+</body>
+</html>
