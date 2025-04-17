@@ -129,7 +129,7 @@
 
   <div class="player-modal" id="videoModal">
     <button class="close-btn" onclick="closePlayer()">X</button>
-    <video id="m3u8Player" class="video-js vjs-default-skin" controls preload="auto" playsinline webkit-playsinline></video>
+    <video id="m3u8Player" class="video-js vjs-default-skin" controls playsinline webkit-playsinline muted preload="auto"></video>
   </div>
 
   <div id="mainLoader" class="loader-wrapper">
@@ -151,7 +151,6 @@
       document.getElementById("videoModal").style.display = "none";
       videoPlayer.pause();
       videoPlayer.reset();
-      videoPlayer.src(""); // Clear the src
     }
 
     function fetchChannels() {
@@ -205,23 +204,18 @@
                   document.getElementById("videoModal").style.display = "flex";
                   document.getElementById("mainLoader").style.display = "block";
 
-                  // Check if browser can play HLS natively
-                  const testVid = document.createElement("video");
-                  const canPlay = testVid.canPlayType("application/vnd.apple.mpegURL");
-
-                  videoPlayer.pause();
-                  videoPlayer.reset();
-
-                  videoPlayer.src({ src: link, type: "application/x-mpegURL" });
-                  videoPlayer.play();
-
-                  videoPlayer.on("loadeddata", () => {
+                  // Check first if stream is playable before loading into Video.js
+                  const testVideo = document.createElement("video");
+                  testVideo.src = link;
+                  testVideo.addEventListener("loadedmetadata", () => {
+                    videoPlayer.src({ src: link, type: "application/x-mpegURL" });
+                    videoPlayer.play().catch(() => console.log("Autoplay blocked"));
                     document.getElementById("mainLoader").style.display = "none";
                   });
-
-                  videoPlayer.on("error", () => {
-                    alert("Error loading stream. Try again later.");
+                  testVideo.addEventListener("error", () => {
+                    alert("Stream haifanyi kazi au imefungwa (CORS). Tafadhali jaribu tena baadaye.");
                     closePlayer();
+                    document.getElementById("mainLoader").style.display = "none";
                   });
                 } else {
                   alert("Channel is currently offline.");
