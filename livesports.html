@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>M3U8 Player</title>
+  <title>LIVE</title>
   <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet"/>
   <style>
     body {
@@ -129,7 +129,7 @@
 
   <div class="player-modal" id="videoModal">
     <button class="close-btn" onclick="closePlayer()">X</button>
-    <video id="m3u8Player" class="video-js vjs-default-skin" controls preload="auto"></video>
+    <video id="m3u8Player" class="video-js vjs-default-skin" controls preload="auto" playsinline webkit-playsinline></video>
   </div>
 
   <div id="mainLoader" class="loader-wrapper">
@@ -151,6 +151,7 @@
       document.getElementById("videoModal").style.display = "none";
       videoPlayer.pause();
       videoPlayer.reset();
+      videoPlayer.src(""); // Clear the src
     }
 
     function fetchChannels() {
@@ -203,10 +204,24 @@
                 if (status.toLowerCase() !== "offline") {
                   document.getElementById("videoModal").style.display = "flex";
                   document.getElementById("mainLoader").style.display = "block";
+
+                  // Check if browser can play HLS natively
+                  const testVid = document.createElement("video");
+                  const canPlay = testVid.canPlayType("application/vnd.apple.mpegURL");
+
+                  videoPlayer.pause();
+                  videoPlayer.reset();
+
                   videoPlayer.src({ src: link, type: "application/x-mpegURL" });
                   videoPlayer.play();
+
                   videoPlayer.on("loadeddata", () => {
                     document.getElementById("mainLoader").style.display = "none";
+                  });
+
+                  videoPlayer.on("error", () => {
+                    alert("Error loading stream. Try again later.");
+                    closePlayer();
                   });
                 } else {
                   alert("Channel is currently offline.");
